@@ -15,6 +15,7 @@ typedef struct {
   bool has_collision;
   bool has_sprite;
   char *sprite_path;
+  bool is_grounded;
 } Entity;
 
 typedef struct {

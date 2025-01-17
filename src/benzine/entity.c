@@ -30,6 +30,7 @@ int entity_create(EntityManager *manager) {
     entity->has_collision = false;
     entity->has_sprite = false;
     entity->sprite_path = NULL;
+    entity->is_grounded = false;
 
     manager->entity_count++;
     return id;

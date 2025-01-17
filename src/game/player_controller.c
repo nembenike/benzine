@@ -12,6 +12,9 @@ void update_player_movement(Engine *engine, int player_id) {
     Entity *player = &engine->entity_manager.entities[player_id];
     if (!player->active) return;
 
+    // Apply gravity first
+    handle_gravity(engine, player);
+
     float target_vel_x = 0;
     float target_vel_y = 0;
 
@@ -33,6 +36,11 @@ void update_player_movement(Engine *engine, int player_id) {
         target_vel_y = 1;
     }
 
+    // Handle jump
+    if (input_is_key_pressed(&engine->input, SDLK_SPACE)) {
+        jump(engine, player);
+    }
+
     // Normalize diagonal movement
     if (target_vel_x != 0 && target_vel_y != 0) {
         float length = sqrt(target_vel_x * target_vel_x + target_vel_y * target_vel_y);
@@ -50,4 +58,49 @@ void update_player_movement(Engine *engine, int player_id) {
                                    accel * engine->delta_time);
     player->velocity_y = move_toward(player->velocity_y, target_vel_y, 
                                    accel * engine->delta_time);
+    
+    handle_boundary_collision(engine, player);
+}
+
+void handle_boundary_collision(Engine* engine, Entity* player) {
+    // Left boundary
+    if (player->x < 0) {
+        player->x = 0;
+        player->velocity_x = 0;
+    }
+    // Right boundary
+    if (player->x + player->width > engine->screen_width) {
+        player->x = engine->screen_width - player->width;
+        player->velocity_x = 0;
+    }
+    // Top boundary
+    if (player->y < 0) {
+        player->y = 0;
+        player->velocity_y = 0;
+    }
+    // Bottom boundary
+    if (player->y + player->height > engine->screen_height) {
+        player->y = engine->screen_height - player->height;
+        player->velocity_y = 0;
+    }
+}
+
+void jump(Engine* engine, Entity* player) {
+    if (player->is_grounded && input_is_key_just_pressed(&engine->input, SDLK_SPACE)) {
+        player->velocity_y = -JUMP_STRENGTH;
+        player->is_grounded = false;
+    }
+}
+
+void handle_gravity(Engine* engine, Entity* player) {
+    player->velocity_y += GRAVITY * engine->delta_time;
+    
+    // Check ground collision
+    if (player->y + player->height >= engine->screen_height) {
+        player->y = engine->screen_height - player->height;
+        player->velocity_y = 0;
+        player->is_grounded = true;
+    } else {
+        player->is_grounded = false;
+    }
 }
